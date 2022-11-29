@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>click</title>
+</head>
+
+<body>
+  <div id="roleNum">
+    <div class="role">
+      <img src="./images/chimmy1.png" alt="">
+      <p style="font-weight: bold">角色 1</p>
+      <span id="text-role1">0 / 0</span>
+    </div>
+    <div class="role">
+      <img src="./images/van1.png" alt="">
+      <p style="font-weight: bold">角色 2</p>
+      <span id="text-role2">0 / 0</span>
+    </div>
+    <div id="roleOther" style="line-height: 62px">
+      <p>| 誤擊 | <span id="text-otherScore">0</span></p>
+    </div>
+    <div id="text">
+      <p>| 剩餘 | <span id="text-time">0</span> 秒</p>
+      <p>| 得分 | <span id="text-score">0</span> 分</p>
+    </div>
+  </div>
+  <div class="container">
+    <!-- 可選角色 -->
+    <div id="left">
+      <div class="theme" style="background:#fccc00">
+        <img src="./images/chimmy1.png" data-title="chimmy">
+        <p>CHIMMY</p>
+      </div>
+      <div class="theme" style="background:rgb(236, 122, 173)">
+        <img src="./images/cooky1.png" data-title="cooky">
+        <p>COOKY</p>
+      </div>
+      <div class="theme" style="background:#54C3F1">
+        <img src="./images/koya1.png" data-title="koya">
+        <p>KOYA</p>
+      </div>
+      <div class="theme" style="background:#BBA4CE">
+        <img src="./images/mang1.png" data-title="mang">
+        <p>MANG</p>
+      </div>
+      <div class="theme" style="background:#E72D30">
+        <img src="./images/rj1.png" data-title="rj">
+        <p>RJ</p>
+      </div>
+      <div class="theme" style="background:#F6AC01">
+        <img src="./images/shooky1.png" data-title="shooky">
+        <p>SHOOKY</p>
+      </div>
+      <div class="theme" style="background:#E2E2E2">
+        <img src="./images/van1.png" data-title="van">
+        <p>VAN</p>
+      </div>
+      <div class="theme" style="background:#5A77BB">
+        <img src="./images/tata1.png" data-title="tata">
+        <p>TATA</p>
+      </div>
+    </div>
+    <p id="text-info" style="float: left;margin-left: 20px">
+      ☆ 遊戲說明 ☆<br><br>
+      從 BT21 的角色中選擇 2 位，<br>
+      在 30 秒內達到指定的目標點擊數 → WIN！<br><br>
+      點擊到選擇的角色獲得 1 分，以累計分數高低作為依據<br>
+      ※ 分數最高 + 達到目標點擊數 才可列入排行<br><br>
+      想成為一流的點擊王嗎？準備好了就開始遊戲吧！<br>
+    </p>
+    <!-- 選定角色 -->
+    <div id="right">
+      <div class="theme">
+        <img src="./images/none.png">
+        <p>?</p>
+      </div>
+      <div class="theme">
+        <img src="./images/none.png">
+        <p>?</p>
+      </div>
+      <p class="again">重選</p>
+      <!-- 難易度 -->
+      <input type="button" id="btnEasy" value="EASY">
+      <input type="button" id="btnHard" value="HARD">
+      <!-- 開始 -->
+      <input type="button" id="btnStart" value="GAME START">
+    </div>
+  </div>
+  <div id="area"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.js'
+    integrity='sha512-CX7sDOp7UTAq+i1FYIlf9Uo27x4os+kGeoT7rgwvY+4dmjqV0IuE/Bl5hVsjnQPQiTOhAX1O2r2j5bjsFBvv/A=='
+    crossorigin='anonymous'></script>
+  <script>
+    let timer = 0
+    // 倒數
+    let countdown = 30
+    // 選擇角色點擊次數
+    let click = 0
+    // 角色檔名
+    let role1 = '', role2 = '', roleOther = ''
+    // 分數
+    let role1Score = 0, role2Score = 0, otherScore = 0, totalScore = 0
+    // 設定隨機點擊數
+    let role1Num = Math.round(Math.random() * 15) + 5
+    let role2Num = Math.round(Math.random() * 15) + 5
+    let roles = ['CHIMMY', 'COOKY', 'KOYA', 'MANG', 'RJ', 'SHOOKY', 'VAN', 'TATA']
+    const highscore = localStorage.bt21Click ? JSON.parse(localStorage.bt21Click) : [{ name: '', level: 'EASY', score: 0 }, { name: '', level: 'HARD', score: 0 }]
+    $('#area').hide()
+    $('#btnStart, #btnEasy, #btnHard').attr('disabled', true)
+    // 選定角色
+    $('#left .theme').each(function () {
+      $(this).on('click', function () {
+        click++
+        if (click === 1) {
+          $(this).css('border', '5px solid lightgray')
+          $('.role p').eq(0).text($(this).find('p').text())
+          $('.role img').eq(0).attr('src', $(this).find('img').attr('src'))
+          $('#right .theme p').eq(0).text($(this).find('p').text())
+          $('#right .theme img').eq(0).attr('src', $(this).find('img').attr('src'))
+          $('#right .theme img').eq(0).attr('data-title', $(this).find('img').attr('data-title'))
+          $('#right .theme').eq(0).css('background', $(this).css('background'))
+          role1 = $('#right .theme').find('img').eq(0).attr('data-title')
+        } else if (click === 2) {
+          $('#btnStart, #btnEasy, #btnHard').attr('disabled', false)
+          $(this).css('border', '5px solid lightgray')
+          $('#btnEasy').css('border', '3px solid #eee')
+          $('.role p').eq(1).text($(this).find('p').text())
+          $('.role img').eq(1).attr('src', $(this).find('img').attr('src'))
+          $('#right .theme p').eq(1).text($(this).find('p').text())
+          $('#right .theme img').eq(1).attr('src', $(this).find('img').attr('src'))
+          $('#right .theme img').eq(1).attr('data-title', $(this).find('img').attr('data-title'))
+          $('#right .theme').eq(1).css('background', $(this).css('background'))
+          role2 = $('#right .theme').find('img').eq(1).attr('data-title')
+        }
+      })
+    })
+    // 重選復原
+    $('.again').on('click', function () {
+      click = 0
+      role1 = ''
+      role2 = ''
+      $('#btnStart, #btnEasy, #btnHard').attr('disabled', true).css('border', '')
+      $('#right .theme img').attr({ 'src': './images/none.png', 'data-title': '' })
+      $('#right .theme p').text('?')
+      $('#right .theme').css('background', '')
+      $('#left .theme').css('border', '1px solid #333')
+      roles = ['CHIMMY', 'COOKY', 'KOYA', 'MANG', 'RJ', 'SHOOKY', 'VAN', 'TATA']
+    })
+
+    // 選擇難易度
+    $('#btnHard').on('click', function () {
+      $(this).css('border', '3px solid #eee')
+      $('#btnEasy').css('border', '')
+      // 刪除已選定的角色
+      roles = roles.filter(role => {
+        return role !== role1.toUpperCase() && role !== role2.toUpperCase()
+      })
+      $('#text-info').html(`
+      ☆ 遊戲說明 ☆<br><br>
+      從 BT21 的角色中選擇 2 位，<br>
+      在 30 秒內達到指定的目標點擊數 → WIN！<br><br>
+      點擊到選擇的角色獲得 1 分，點擊到其他角色扣 1 分<br>
+      ※ 分數最高 + 達到目標點擊數 才可列入排行<br><br>
+      想成為一流的點擊王嗎？準備好了就開始遊戲吧！<br>
+      `)
+    })
+
+    $('#btnEasy').on('click', function () {
+      roles = ['CHIMMY', 'COOKY', 'KOYA', 'MANG', 'RJ', 'SHOOKY', 'VAN', 'TATA']
+      $(this).css('border', '3px solid #eee')
+      $('#btnHard').css('border', '')
+      $('#text-info').html(`
+      ☆ 遊戲說明 ☆<br><br>
+      從 BT21 的角色中選擇 2 位，<br>
+      在 30 秒內達到指定的目標點擊數 → WIN！<br><br>
+      點擊到選擇的角色獲得 1 分，以累計分數高低作為依據<br>
+      ※ 分數最高 + 達到目標點擊數 才可列入排行<br><br>
+      想成為一流的點擊王嗎？準備好了就開始遊戲吧！<br>
+      `)
+    })
+
+    // 角色 1 移動
+    function move(first) {
+      const top = Math.round(Math.random() * 100) + '%'
+      const left = Math.round(Math.random() * 100) + '%'
+      first.stop().animate({ top, left }, 2000, function () {
+        if ($('#btnStart').attr('disabled') === 'disable') move(first)
+      })
+      setTimeout(() => {
+        first.fadeOut(300)
+      }, 2000);
+    }
+    // 角色 2 移動
+    function move(second) {
+      const top = Math.round(Math.random() * 100) + '%'
+      const left = Math.round(Math.random() * 100) + '%'
+      second.stop().animate({ top, left }, 1000, function () {
+        if ($('#btnStart').attr('disabled') === 'disable') move(second)
+      })
+      setTimeout(() => {
+        second.fadeOut(300)
+      }, 2500);
+    }
+    // other
+    function move(others) {
+      const top = Math.round(Math.random() * 100) + '%'
+      const left = Math.round(Math.random() * 100) + '%'
+      others.stop().animate({ top, left }, 1500, function () {
+        if ($('#btnStart').attr('disabled') === 'disable') move(others)
+      })
+      setTimeout(() => {
+        others.fadeOut(300)
+      }, 2000);
+    }
+    // ------------------------------- 開始遊戲 -------------------------------
+    $('#btnStart').click(function () {
+      $('#right, #left, #text-info, #btnStart').fadeOut()
+      $('#text-score').text(totalScore)
+      $('#text-time').text(countdown)
+      $('#text-role1').text(` ${role1Score} / ${role1Num}`)
+      $('#text-role2').text(` ${role2Score} / ${role2Num}`)
+      $('#area, #text, #high').fadeIn()
+      $('#roleNum').css('opacity', 1)
+      if (roles.length === 6) $('#roleOther').css('display', 'block')
+
+      timer = setInterval(() => {
+        countdown--
+        $('#text-time').text(countdown)
+        // 角色 1
+        let top = Math.round(Math.random() * 100) + '%'
+        let left = Math.round(Math.random() * 100) + '%'
+        const first = $(`<img src="./images/${role1}1.png" class="one" data-title="${role1}" style="top: ${top}; left: ${left}">`)
+        $('#area').append(first)
+        move(first)
+        // 角色 2
+        setTimeout(() => {
+          top = Math.round(Math.random() * 100) + '%'
+          left = Math.round(Math.random() * 100) + '%'
+          const second = $(`<img src="./images/${role2}1.png" class="one" data-title="${role2}" style="top: ${top}; left: ${left}">`)
+          $('#area').append(second)
+          move(second)
+        }, 700)
+        // 選擇難易度為 HARD 才產生
+        if (roles.length === 6) {
+          // others
+          setTimeout(() => {
+            top = Math.round(Math.random() * 100) + '%'
+            left = Math.round(Math.random() * 100) + '%'
+            roleOther = roles[Math.round(Math.random() * 5)].toLowerCase()
+            const others = $(`<img src="./images/${roleOther}1.png" class="one" data-title="${roleOther}" style="top: ${top}; left: ${left}">`)
+            $('#area').append(others)
+            move(others)
+          }, 800)
+        }
+        // ------------------------------- 時間停止 -------------------------------
+        if (countdown === 0) {
+          clearInterval(timer)
+          $('#area img').remove()
+          $('#area, #text, #high, #roleNum').fadeOut()
+          Swal.fire({
+            icon: 'info',
+            title: '時間到',
+            text: `你的分數是 ${totalScore} 分`
+          }).then(result => {
+            location.reload()
+          })
+          // 目標數皆完成 且 各自等級中新高分
+          if (role1Score >= role1Num && role2Score >= role2Num) {
+            if ((roles.length === 8 && totalScore > highscore[0].score) ||
+              (roles.length === 6 && totalScore > highscore[1].score)) {
+              Swal.fire({
+                title: '~ 新紀錄 ~',
+                html: `你的分數是 ${totalScore} 分 <br>留下大名！`,
+                input: 'text',
+                inputPlaceholder: 'your name',
+                inputAttributes: {
+                  reqired: true
+                },
+                validationMessage: '必填'
+              }).then(result => {
+                if (roles.length === 6) {
+                  highscore[1].name = result.value
+                  highscore[1].level = 'HARD'
+                  highscore[1].score = totalScore
+                  highscore[0] = highscore[0]
+                } else {
+                  highscore[0].name = result.value
+                  highscore[0].level = 'EASY'
+                  highscore[0].score = totalScore
+                  highscore[1] = highscore[1]
+                }
+                localStorage.bt21Click = JSON.stringify(highscore)
+                location.reload()
+              })
+            }
+          }
+        }
+      }, 1000);
+    })
+    // 點擊到區域內的角色時
+    $('#area').on('click', '.one', function () {
+      $(this).stop()
+      $(this).attr('src', `./images/${$(this).attr('data-title')}2.png`)
+      $(this).removeClass('one').addClass('two').fadeOut()
+      if ($(this).attr('data-title') === role1) {
+        role1Score++
+        totalScore++
+      } else if ($(this).attr('data-title') === role2) {
+        role2Score++
+        totalScore++
+      } else {
+        otherScore++
+        totalScore--
+      }
+      $('#text-role1').text(`${role1Score} / ${role1Num}`)
+      $('#text-role2').text(`${role2Score} / ${role2Num}`)
+      $('#text-otherScore').text(otherScore)
+      $('#text-score').text(totalScore)
+    })
+
+  </script>
+</body>
+
+</html>
